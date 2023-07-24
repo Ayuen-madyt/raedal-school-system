@@ -1,15 +1,28 @@
-import React, { useEffect, useState } from 'react'
-import Link from 'next/link';
-import Layout from '../components/Layout';
-import { createStyles, Header, rem, Group, Button, Title, Paper, Box, Popover, Text, Flex } from '@mantine/core';
-import { StatsGrid } from '../components/dashboard/StatsGrid';
-import Chart from '../components/dashboard/Chart';
-import { DateInput } from '@mantine/dates';
-import fetcher from '../../functionsToCallAPI/fetcher';
-import useSWR from 'swr'
-import CommonTable from "../components/common/CommonTable"
-import { formatNumber } from '../components/common/formatNumber';
-
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import Layout from "../components/Layout";
+import {
+  createStyles,
+  Header,
+  rem,
+  Group,
+  Button,
+  Title,
+  Paper,
+  Box,
+  Popover,
+  Text,
+  Flex,
+} from "@mantine/core";
+import { StatsGrid } from "../components/dashboard/StatsGrid";
+import Chart from "../components/dashboard/Chart";
+import { DateInput } from "@mantine/dates";
+import fetcher from "../../functionsToCallAPI/fetcher";
+import useSWR from "swr";
+import CommonTable from "../components/common/CommonTable";
+import { formatNumber } from "../components/common/formatNumber";
+import axios from "axios";
+import { useRouter } from "next/router";
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -62,23 +75,34 @@ const useStyles = createStyles((theme) => ({
 
 export default function home() {
   const { classes } = useStyles();
-  const [invoices, setInvoices] = useState([])
+  const [invoices, setInvoices] = useState([]);
+  const router = useRouter();
 
   const { data, error } = useSWR(
     "http://localhost:8001/api/invoices/all",
     fetcher
   );
 
-  const totalAmountThisYear = invoices?.reduce((sum, invoice) => sum + invoice.amount, 0);
-  const grandTotalAmount = data?.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const totalAmountThisYear = invoices?.reduce(
+    (sum, invoice) => sum + invoice.amount,
+    0
+  );
+  const grandTotalAmount = data?.reduce(
+    (sum, invoice) => sum + invoice.amount,
+    0
+  );
 
   const formattedData = data?.map((item) => ({
     _id: item._id,
     status: item.status,
     party: `${item.party.firstName} ${item.party.secondName}`,
     date: new Date(item.date).toLocaleDateString(),
-    baseGrandTotal: `Ksh ${formatNumber(item.amount)}`,
-    outstandingAmount: `Ksh ${formatNumber(item.outstandingAmount<0?0:item.outstandingAmount)}`,
+    baseGrandTotal: `${localStorage.getItem("currency")} ${formatNumber(
+      item.amount
+    )}`,
+    outstandingAmount: `${localStorage.getItem("currency")} ${formatNumber(
+      item.outstandingAmount < 0 ? 0 : item.outstandingAmount
+    )}`,
   }));
 
   const columns = [
@@ -95,8 +119,8 @@ export default function home() {
       const invoiceYear = new Date(invoice.date).getFullYear();
       return invoiceYear === new Date().getFullYear();
     });
-    setInvoices(filteredInvoices)
-  }, [data])
+    setInvoices(filteredInvoices);
+  }, [data]);
 
   return (
     <Layout>
@@ -107,17 +131,18 @@ export default function home() {
           </Group>
 
           <Group>
-            <Group ml={5} spacing={5} className={classes.links}>
-              
-            </Group>
+            <Group ml={5} spacing={5} className={classes.links}></Group>
           </Group>
         </div>
       </Header>
       <Paper px="md">
-        <StatsGrid grandTotalAmount={grandTotalAmount} totalAmountThisYear={totalAmountThisYear} />
+        <StatsGrid
+          grandTotalAmount={grandTotalAmount}
+          totalAmountThisYear={totalAmountThisYear}
+        />
         <Text mt="sm">Recent invoices</Text>
-        <CommonTable data={formattedData?.slice(0, 20)} columns={columns}/>
+        <CommonTable data={formattedData?.slice(0, 20)} columns={columns} />
       </Paper>
     </Layout>
-  )
+  );
 }

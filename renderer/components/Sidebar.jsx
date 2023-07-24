@@ -12,18 +12,14 @@ import {
   rem,
   Box,
 } from "@mantine/core";
-import {
-  IconBulb,
-  IconUser,
-  IconCheckbox,
-  IconLogout,
-  IconSearch,
-  IconPlus,
-  IconSelector,
-} from "@tabler/icons-react";
+import { IconLogout, IconPlus, IconSelector } from "@tabler/icons-react";
 import { UserButton } from "./UserButton/UserButton";
 import Link from "next/link";
 import { Fragment } from "react";
+import fetcher from "../../functionsToCallAPI/fetcher";
+import useSWR from "swr";
+import axios from "axios";
+import { useRouter } from "next/router";
 
 const useStyles = createStyles((theme) => ({
   navbar: {
@@ -154,10 +150,29 @@ const collections = [
   { emoji: "🧑🏾‍💼", label: "Teachers", link: "/teachers" },
   { emoji: "🧑🏿‍🏭", label: "Staff", link: "/staff" },
   { emoji: "💰", label: "Fee Structure", link: "/fees" },
+  { emoji: "⚙️", label: "Settings", link: "/settings" },
 ];
 
 export function Sidebar() {
   const { classes } = useStyles();
+  const router = useRouter();
+  const { data, error } = useSWR(
+    "http://localhost:8001/api/settings/get",
+    fetcher
+  );
+
+  const logout = () => {
+    axios
+      .get("http://localhost:8001/api/users/logout/1")
+      .then((res) => {
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   const mainLinks = links.map((link) => (
     <UnstyledButton key={link.label} className={classes.mainLink}>
@@ -194,9 +209,13 @@ export function Sidebar() {
       <Box>
         <Navbar.Section className={classes.section}>
           <UserButton
-            image="https://png.pngtree.com/png-clipart/20230105/original/pngtree-school-logo-design-png-image_8873860.png"
-            name="Comboni High School"
-            email="combonihighschool@gmail.com"
+            image={
+              process.env.APPDATA +
+              "/Raedal-school-system/uploads/" +
+              data?.settings?.logo
+            }
+            name={data?.settings?.name}
+            email={data?.settings?.email}
             icon={<IconSelector size="0.9rem" stroke={1.5} />}
           />
         </Navbar.Section>
@@ -220,7 +239,7 @@ export function Sidebar() {
         </Navbar.Section>
       </Box>
 
-      <Group style={{ cursor: "pointer" }}>
+      <Group onClick={logout} style={{ cursor: "pointer" }}>
         <div
           style={{
             display: "flex",

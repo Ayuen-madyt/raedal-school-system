@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import Layout from "../components/Layout";
 import CommonTable from "../components/common/CommonTable";
 import fetcher from "../../functionsToCallAPI/fetcher";
@@ -12,11 +12,12 @@ import {
   Button,
   Title,
   TextInput,
-  Pagination
+  Pagination,
 } from "@mantine/core";
-import { IconSearch, IconPlus} from "@tabler/icons-react";
-import lunr from 'lunr';
+import { IconSearch, IconPlus } from "@tabler/icons-react";
+import lunr from "lunr";
 import { useRouter } from "next/router";
+import { CSVLink, CSVDownload } from "react-csv";
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -69,9 +70,9 @@ const useStyles = createStyles((theme) => ({
 
 function Ledger() {
   const { classes } = useStyles();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const router = useRouter()
+  const router = useRouter();
   const { data, error } = useSWR(
     "http://localhost:8001/api/accounts/all",
     fetcher
@@ -81,20 +82,22 @@ function Ledger() {
     _id: item._id,
     account: item.account,
     date: new Date(item.date).toLocaleDateString(),
-    debit: `Ksh ${formatNumber(item.debit)}`,
-    credit: `Ksh ${formatNumber(item.credit)}`,
-    balance: `Ksh ${formatNumber(item.balance)}`,
+    debit: `${localStorage.getItem("currency")} ${formatNumber(item.debit)}`,
+    credit: `${localStorage.getItem("currency")} ${formatNumber(item.credit)}`,
+    balance: `${localStorage.getItem("currency")} ${formatNumber(
+      item.balance
+    )}`,
     partyAdmNo: item.party._id,
     party: `${item.party.firstName} ${item.party.secondName}`,
     reference: item._id,
   }));
 
   const index = lunr(function () {
-    this.ref('_id');
-    this.field('_id');
-    this.field('account');
-    this.field('party');
-    this.field('date');
+    this.ref("_id");
+    this.field("_id");
+    this.field("account");
+    this.field("party");
+    this.field("date");
 
     formattedData?.forEach((item) => {
       this.add(item);
@@ -104,32 +107,26 @@ function Ledger() {
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
-  
-    if (term.trim() === '') {
+
+    if (term.trim() === "") {
       setSearchResults([]);
     } else if (index) {
       const results = index.search(term);
-  
-      const matchedItems = results.map((result) => {
-        const item = data?.find((dataItem) => dataItem._id === parseInt(result.ref));
-        if (item) {
-          const formattedItem = {
-            _id: item._id,
-            status: item.status,
-            party: `${item.party.firstName} ${item.party.secondName}`,
-            date: new Date(item.date).toLocaleDateString(),
-            baseGrandTotal: `Ksh ${formatNumber(item.amount)}`,
-            outstandingAmount: `Ksh ${formatNumber(item.outstandingAmount)}`,
-          };
-          return formattedItem;
-        }
-        return null;
-      }).filter(Boolean);
-  
+
+      const matchedItems = results
+        .map((result) => {
+          const item = formattedData?.find(
+            (dataItem) => dataItem._id === parseInt(result.ref)
+          );
+
+          return item;
+        })
+        .filter(Boolean);
+
       setSearchResults(matchedItems);
     }
   };
-  
+
   const columns = [
     { label: "Account", dataKey: "account" },
     { label: "Date", dataKey: "date" },
@@ -143,32 +140,38 @@ function Ledger() {
   return (
     <Layout>
       <Header className={classes.header} mb={10}>
-      <div className={classes.inner}>
+        <div className={classes.inner}>
           <Group>
             <Title style={{ fontSize: "15px" }}>General Ledger</Title>
           </Group>
 
           <Group>
-            <TextInput
+            {/* <TextInput
               icon={<IconSearch size="1.1rem" stroke={1.5} />}
               radius="md"
               size="sm"
               value={searchTerm}
-              // onChange={handleSearch}
+              onChange={handleSearch}
               placeholder="Search the ledger"
-            />
+            /> */}
             <Group ml={5} spacing={5} className={classes.links}>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Export
-              </Button>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Filter
-              </Button>
+              <CSVLink
+                filename={"ledger.csv"}
+                data={formattedData?.length > 0 ? formattedData : []}
+              >
+                <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
+                  Export
+                </Button>
+              </CSVLink>
             </Group>
           </Group>
         </div>
       </Header>
-      <CommonTable data={formattedData} columns={columns} title="General Ledger" />
+      <CommonTable
+        data={formattedData}
+        columns={columns}
+        title="General Ledger"
+      />
     </Layout>
   );
 }

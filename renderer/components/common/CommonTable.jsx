@@ -169,7 +169,7 @@ export default function CommonTable({ data, columns, title }) {
                       ? `/staffDetails/${row._id}`
                       : title == "Invoices"
                       ? `/invoiceDetails/${row._id}`
-                      :router.asPath
+                      : router.asPath
                   }
                   passHref
                 >
@@ -243,6 +243,14 @@ export default function CommonTable({ data, columns, title }) {
                             {row[column.dataKey]}
                           </Badge>
                         )}
+                        {row[column.dataKey] === "Graduated" && (
+                          <Badge
+                            color="gray"
+                            className={classes.badgeCancelled}
+                          >
+                            {row[column.dataKey]}
+                          </Badge>
+                        )}
                         {row[column.dataKey] !== "Paid" &&
                           row[column.dataKey] !== "Unpaid" &&
                           row[column.dataKey] !== "Widthdrawn" &&
@@ -251,6 +259,7 @@ export default function CommonTable({ data, columns, title }) {
                           row[column.dataKey] !== "Employed" &&
                           row[column.dataKey] !== "Pending" &&
                           row[column.dataKey] !== "Not Working" &&
+                          row[column.dataKey] !== "Graduated" &&
                           row[column.dataKey] !== "Cancelled" && (
                             <span>{row[column.dataKey]}</span>
                           )}

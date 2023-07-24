@@ -4,11 +4,12 @@ import Datastore from "nedb";
 const router = express.Router(); // Create a router instance
 
 export const balancesDB = new Datastore({
-  filename: process.env.APPDATA + "/Raedal-school-system/server/databases/balances.db",
+  filename:
+    process.env.APPDATA + "/Raedal-school-system/server/databases/balances.db",
   autoload: true,
 });
 
-balancesDB.ensureIndex({ fieldName: '_id', unique: true });
+balancesDB.ensureIndex({ fieldName: "_id", unique: true });
 
 // Define your routes
 router.get("/", function (req, res) {
@@ -16,32 +17,59 @@ router.get("/", function (req, res) {
 });
 
 router.get("/all", function (req, res) {
-  balancesDB.find({}).sort({ date: -1 }).exec(function (err, docs) {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send(docs);
-    }
-  });
+  balancesDB
+    .find({})
+    .sort({ date: -1 })
+    .exec(function (err, docs) {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send(docs);
+      }
+    });
 });
 
+router.get("/filter", function (req, res) {
+  const { studentClass, year, term } = req.query;
+  const filter = {};
 
-
-router.get( "/:partyId", function ( req, res ) {
-  if ( !req.params.partyId ) {
-      res.status( 500 ).send( "ID field is required." );
-  } else {
-      balancesDB.findOne( {
-        partyAdmNo: parseInt(req.params.partyId)
-      }, function ( err, balance ) {
-          res.send( balance );
-      } );
+  if (studentClass) {
+    filter.partyClass = studentClass;
   }
-} );
 
+  if (term) {
+    filter["term.term"] = term;
+  }
+
+  balancesDB
+    .find(filter)
+    .sort({ date: -1 })
+    .exec(function (err, docs) {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send(docs);
+      }
+    });
+});
+
+router.get("/:partyId", function (req, res) {
+  if (!req.params.partyId) {
+    res.status(500).send("ID field is required.");
+  } else {
+    balancesDB.findOne(
+      {
+        partyAdmNo: parseInt(req.params.partyId),
+      },
+      function (err, balance) {
+        res.send(balance);
+      }
+    );
+  }
+});
 
 router.delete("/delete/:balanceId", function (req, res) {
-  console.log("balance id: ", req.params.balanceId)
+  console.log("balance id: ", req.params.balanceId);
   balancesDB.remove(
     {
       _id: parseInt(req.params.balanceId),
@@ -52,7 +80,6 @@ router.delete("/delete/:balanceId", function (req, res) {
     }
   );
 });
-
 
 // Export the router
 export default router;

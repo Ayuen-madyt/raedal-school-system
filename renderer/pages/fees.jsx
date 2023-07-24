@@ -169,8 +169,14 @@ export default function Fees({ title, mode }) {
             style={{ width: "100%", overflow: "auto" }}
           >
             {data?.map((data) => (
-              <Paper key={data._id} className={classes.term} onClick={()=>router.push(`/feeDetails/${data._id}`)} >
-                <Title className={classes.title}>{data.term}</Title>
+              <Paper
+                key={data._id}
+                className={classes.term}
+                onClick={() => router.push(`/feeDetails/${data._id}`)}
+              >
+                <Title className={classes.title}>
+                  {data.term.toUpperCase()}
+                </Title>
                 <Divider mt="sm" />
                 {data.fields.map((field) => (
                   <Flex
@@ -200,7 +206,9 @@ export default function Fees({ title, mode }) {
                   style={{ paddingRight: 50, paddingLeft: 50 }}
                 >
                   <Text>Total</Text>
-                  <Text>{`KSH ${formatNumber(data.total)}`}</Text>
+                  <Text>{`${localStorage.getItem("currency")} ${formatNumber(
+                    data.total
+                  )}`}</Text>
                 </Flex>
               </Paper>
             ))}

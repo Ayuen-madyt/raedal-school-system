@@ -75,8 +75,9 @@ const useStyles = createStyles((theme) => ({
 
 export default function NewInvoice({ title, mode, fee }) {
   const { classes } = useStyles();
+  const [currency, setCurrency] = useState("");
   const [searchParty, setSearchPartyChange] = useState("");
-  const[overPaidBalance, setOverPaidBalance] = useState(0);
+  const [overPaidBalance, setOverPaidBalance] = useState(0);
   const [term, setTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSave, setShowSave] = useState(false);
@@ -123,7 +124,10 @@ export default function NewInvoice({ title, mode, fee }) {
       notes: isNotEmpty(),
     },
     transformValues: (values) => {
-      const overPaidBalanceValue = overPaidBalance.overPaidBalance !== undefined ? Number(overPaidBalance.overPaidBalance) : 0;
+      const overPaidBalanceValue =
+        overPaidBalance.overPaidBalance !== undefined
+          ? Number(overPaidBalance.overPaidBalance)
+          : 0;
       return {
         id: "",
         party: filteredParty?.[0] || "",
@@ -131,7 +135,8 @@ export default function NewInvoice({ title, mode, fee }) {
         actualAmountPaid: Number(values.amount),
         amount: Number(values.amount) + overPaidBalanceValue,
         notes: values.notes,
-        outstandingAmount: filteredFee?.total - (Number(values.amount) + overPaidBalanceValue),
+        outstandingAmount:
+          filteredFee?.total - (Number(values.amount) + overPaidBalanceValue),
         date: currentDate,
         status: "Paid",
       };
@@ -149,13 +154,13 @@ export default function NewInvoice({ title, mode, fee }) {
           `http://localhost:8001/api/invoices/post`,
           feeData
         );
-  
+
         // Post data to the second URL
         const response2 = await axios.post(
           `http://localhost:8001/api/accounts/post`,
           feeData
         );
-  
+
         // Check the responses and handle accordingly
         if (response1 && response2) {
           console.log("Response 1:", response1);
@@ -184,19 +189,19 @@ export default function NewInvoice({ title, mode, fee }) {
     } else {
       // Handle the case when the required data is not available
     }
-  };  
-  
+  };
 
   const handleBlur = () => {
     setShowSave(true);
   };
 
   useEffect(() => {
+    setCurrency(localStorage.getItem("currency"));
     if (searchParty) {
       axios
         .get(`http://localhost:8001/api/balances/${searchParty}`)
         .then((res) => {
-          setOverPaidBalance(res.data)
+          setOverPaidBalance(res.data);
         })
         .catch((err) => {
           console.log(err);
@@ -233,13 +238,13 @@ export default function NewInvoice({ title, mode, fee }) {
             <Group ml={5} spacing={5} className={classes.links}>
               {showSave && (
                 <Button
-                color="info"
-                compact
-                onClick={postData}
-                disabled={loading}
-              >
-                {loading ? <Loader size="xs" /> : "Save"}
-              </Button>
+                  color="info"
+                  compact
+                  onClick={postData}
+                  disabled={loading}
+                >
+                  {loading ? <Loader size="xs" /> : "Save"}
+                </Button>
               )}
               <Button
                 compact
@@ -367,7 +372,7 @@ export default function NewInvoice({ title, mode, fee }) {
                 />
               </Flex>
             </Box>
-            
+
             <Box mt="xl">
               <Title style={{ fontSize: "13.5px", color: "grey" }}>
                 Debtor
@@ -422,7 +427,11 @@ export default function NewInvoice({ title, mode, fee }) {
                   label: classes.label,
                 }}
                 {...form.getInputProps("amount")}
-               value={`Ksh ${overPaidBalance.overPaidBalance >0 ?formatNumber(overPaidBalance?.overPaidBalance): formatNumber(0)}`}
+                value={`${currency} ${
+                  overPaidBalance.overPaidBalance > 0
+                    ? formatNumber(overPaidBalance?.overPaidBalance)
+                    : formatNumber(0)
+                }`}
               />
             </Box>
 
@@ -430,11 +439,15 @@ export default function NewInvoice({ title, mode, fee }) {
               <TextInput
                 placeholder="Amount"
                 label="Grand Total"
-                value={`Ksh ${feeData.amount >0? formatNumber(feeData.amount): formatNumber(0)}`}
+                value={`${currency} ${
+                  feeData.amount > 0
+                    ? formatNumber(feeData.amount)
+                    : formatNumber(0)
+                }`}
               />
             </Box>
 
-            <Box style={{ marginTop: "20px", marginBottom:30 }}>
+            <Box style={{ marginTop: "20px", marginBottom: 30 }}>
               <Title
                 style={{
                   fontSize: "13.5px",

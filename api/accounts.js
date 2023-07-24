@@ -17,27 +17,27 @@ router.get("/", function (req, res) {
 });
 
 router.get("/all", function (req, res) {
-  accountsDB.find({}).sort({ date: -1 }).exec(function (err, docs) {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send(docs);
-    }
-  });
+  accountsDB
+    .find({})
+    .sort({ date: -1 })
+    .exec(function (err, docs) {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send(docs);
+      }
+    });
 });
 
-
 router.post("/post", function (req, res) {
-  console.log(req.body);
-
   let account1 = {
     _id: parseInt(req.body.id),
-    account: "Student Receivable",
+    account: "Students Receivable",
     date: req.body.date,
     party: req.body.party,
     balance: parseInt(-req.body.actualAmountPaid),
     debit: parseInt(0),
-    credit: parseInt(req.body.actualAmountPaid)
+    credit: parseInt(req.body.actualAmountPaid),
   };
 
   let account2 = {
@@ -58,7 +58,7 @@ router.post("/post", function (req, res) {
         account2._id = Math.floor(Date.now() / 1000) + 1;
         accountsDB.insert(account2, function (err, account2) {
           if (err) res.status(500).send(err);
-          else res.send([account1, account2]); 
+          else res.send([account1, account2]);
         });
       }
     });
@@ -89,7 +89,6 @@ router.post("/post", function (req, res) {
   }
 });
 
-
 // Function to calculate the total of Fee Revenue and Student Receivable for the same month
 router.get("/totals", function (req, res) {
   // Get the current month and year
@@ -106,7 +105,7 @@ router.get("/totals", function (req, res) {
       res.status(500).send(err);
     } else {
       // Iterate over the accounts and calculate the totals for the same month
-      accounts.forEach(account => {
+      accounts.forEach((account) => {
         // Extract the month and year from the account's date
         const accountDate = new Date(account.date);
         const accountMonth = accountDate.getMonth() + 1; // January is month 0
@@ -127,13 +126,10 @@ router.get("/totals", function (req, res) {
       res.send({
         month: currentMonthPattern,
         totalFeeRevenue: totalFeeRevenue,
-        totalStudentReceivable: totalStudentReceivable
+        totalStudentReceivable: totalStudentReceivable,
       });
     }
   });
 });
-
-
-
 
 export default router;

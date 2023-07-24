@@ -23,13 +23,16 @@ router.get("/", function (req, res) {
 });
 
 router.get("/all", function (req, res) {
-  invoiceDB.find({}).sort({ date: -1 }).exec(function (err, docs) {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send(docs);
-    }
-  });
+  invoiceDB
+    .find({})
+    .sort({ date: -1 })
+    .exec(function (err, docs) {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send(docs);
+      }
+    });
 });
 
 router.get("/:invoiceId", function (req, res) {
@@ -48,8 +51,6 @@ router.get("/:invoiceId", function (req, res) {
 });
 
 router.post("/post", function (req, res) {
-  console.log("outstanding amount", Math.abs(req.body.outstandingAmount));
-
   let invoice = {
     _id: parseInt(req.body.id),
     party: req.body.party,
@@ -67,7 +68,7 @@ router.post("/post", function (req, res) {
     status: req.body.status,
     partyAdmNo: req.body.party._id,
     party: req.body.party.firstName + " " + req.body.party.secondName,
-    amount: "ksh" + " " + formatNumber(req.body.amount),
+    amount: formatNumber(req.body.amount),
     date: req.body.date,
   };
 
@@ -117,10 +118,9 @@ router.post("/post", function (req, res) {
                               balance:
                                 existingBalance.balance -
                                 Math.abs(req.body.outstandingAmount),
+                              partyClass: req.body.party.studentClass,
                               overPaidBalance: 0,
-                              date: new Date(
-                                req.body.date
-                              ),
+                              date: new Date(req.body.date),
                             },
                           },
                           {},
@@ -145,9 +145,8 @@ router.post("/post", function (req, res) {
                               overPaidBalance:
                                 Math.abs(req.body.outstandingAmount) -
                                 existingBalance.balance,
-                              date: new Date(
-                                req.body.date
-                              ),
+                              partyClass: req.body.party.studentClass,
+                              date: new Date(req.body.date),
                             },
                           },
                           {},
@@ -162,7 +161,7 @@ router.post("/post", function (req, res) {
                       }
                     }
 
-                 if (req.body.outstandingAmount >= 0) {
+                    if (req.body.outstandingAmount >= 0) {
                       if (
                         existingBalance.overPaidBalance >
                         req.body.outstandingAmount
@@ -176,9 +175,8 @@ router.post("/post", function (req, res) {
                               overPaidBalance:
                                 existingBalance.overPaidBalance -
                                 req.body.outstandingAmount,
-                              date: new Date(
-                                req.body.date
-                              ),
+                              partyClass: req.body.party.studentClass,
+                              date: new Date(req.body.date),
                             },
                           },
                           {},
@@ -190,7 +188,7 @@ router.post("/post", function (req, res) {
                             }
                           }
                         );
-                      } 
+                      }
                       if (
                         req.body.outstandingAmount >
                         existingBalance.overPaidBalance
@@ -205,9 +203,8 @@ router.post("/post", function (req, res) {
                                 req.body.outstandingAmount -
                                 existingBalance.overPaidBalance,
                               overPaidBalance: 0,
-                              date: new Date(
-                                req.body.date
-                              ),
+                              partyClass: req.body.party.studentClass,
+                              date: new Date(req.body.date),
                             },
                           },
                           {},
@@ -220,9 +217,7 @@ router.post("/post", function (req, res) {
                           }
                         );
                       }
-                      if (
-                        req.body.outstandingAmount == 0
-                      ) {
+                      if (req.body.outstandingAmount == 0) {
                         balancesDB.update(
                           { partyAdmNo: req.body.party._id },
                           {
@@ -230,9 +225,8 @@ router.post("/post", function (req, res) {
                               term: req.body.term,
                               balance: existingBalance.balance,
                               overPaidBalance: 0,
-                              date: new Date(
-                                req.body.date
-                              ),
+                              partyClass: req.body.party.studentClass,
+                              date: new Date(req.body.date),
                             },
                           },
                           {},

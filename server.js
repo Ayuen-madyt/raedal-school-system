@@ -8,7 +8,9 @@ import staff from "./api/staff";
 import fee from "./api/fee";
 import invoice from "./api/invoices";
 import balances from "./api/balances";
-import accounts from "./api/accounts"
+import accounts from "./api/accounts";
+import users from "./api/users";
+import settings from "./api/settings";
 
 require("dotenv").config();
 
@@ -47,5 +49,7 @@ app.use("/api/fee", fee);
 app.use("/api/invoices", invoice);
 app.use("/api/balances", balances);
 app.use("/api/accounts", accounts);
+app.use("/api/users", users);
+app.use("/api/settings", settings);
 
 server.listen(PORT, () => console.log(`Listening on PORT ${PORT}`));

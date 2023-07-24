@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import Layout from "../components/Layout";
 import CommonTable from "../components/common/CommonTable";
 import fetcher from "../../functionsToCallAPI/fetcher";
@@ -12,11 +12,12 @@ import {
   Button,
   Title,
   TextInput,
-  Pagination
+  Pagination,
 } from "@mantine/core";
-import { IconSearch, IconPlus} from "@tabler/icons-react";
-import lunr from 'lunr';
+import { IconSearch, IconPlus } from "@tabler/icons-react";
+import lunr from "lunr";
 import { useRouter } from "next/router";
+import { CSVLink, CSVDownload } from "react-csv";
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -69,32 +70,36 @@ const useStyles = createStyles((theme) => ({
 
 function Invoices() {
   const { classes } = useStyles();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const router = useRouter()
+  const router = useRouter();
   const { data, error } = useSWR(
     "http://localhost:8001/api/invoices/all",
     fetcher
   );
-// console.log(data)
+  // console.log(data)
 
   const formattedData = data?.map((item) => ({
     _id: item._id,
     status: item.status,
     party: `${item.party.firstName} ${item.party.secondName}`,
     date: new Date(item.date).toLocaleDateString(),
-    baseGrandTotal: `Ksh ${formatNumber(item.amount)}`,
-    outstandingAmount: `Ksh ${formatNumber(item.outstandingAmount<0?0:item.outstandingAmount)}`,
+    baseGrandTotal: `${localStorage.getItem("currency")} ${formatNumber(
+      item.amount
+    )}`,
+    outstandingAmount: `${localStorage.getItem("currency")} ${formatNumber(
+      item.outstandingAmount < 0 ? 0 : item.outstandingAmount
+    )}`,
   }));
 
   const index = lunr(function () {
-    this.ref('_id');
-    this.field('_id');
-    this.field('status');
-    this.field('party');
-    this.field('date');
-    this.field('baseGrandTotal');
-    this.field('outstandingAmount');
+    this.ref("_id");
+    this.field("_id");
+    this.field("status");
+    this.field("party");
+    this.field("date");
+    this.field("baseGrandTotal");
+    this.field("outstandingAmount");
 
     formattedData?.forEach((item) => {
       this.add(item);
@@ -104,32 +109,42 @@ function Invoices() {
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
-  
-    if (term.trim() === '') {
+
+    if (term.trim() === "") {
       setSearchResults([]);
     } else if (index) {
       const results = index.search(term);
-  
-      const matchedItems = results.map((result) => {
-        const item = data?.find((dataItem) => dataItem._id === parseInt(result.ref));
-        if (item) {
-          const formattedItem = {
-            _id: item._id,
-            status: item.status,
-            party: `${item.party.firstName} ${item.party.secondName}`,
-            date: new Date(item.date).toLocaleDateString(),
-            baseGrandTotal: `Ksh ${formatNumber(item.amount)}`,
-            outstandingAmount: `Ksh ${formatNumber(item.outstandingAmount)}`,
-          };
-          return formattedItem;
-        }
-        return null;
-      }).filter(Boolean);
-  
+
+      const matchedItems = results
+        .map((result) => {
+          const item = data?.find(
+            (dataItem) => dataItem._id === parseInt(result.ref)
+          );
+          if (item) {
+            const formattedItem = {
+              _id: item._id,
+              status: item.status,
+              party: `${item.party.firstName} ${item.party.secondName}`,
+              date: new Date(item.date).toLocaleDateString(),
+              baseGrandTotal: `${localStorage.getItem(
+                "currency"
+              )} ${formatNumber(item.amount)}`,
+              outstandingAmount: `${localStorage.getItem(
+                "currency"
+              )} ${formatNumber(
+                item.outstandingAmount < 0 ? 0 : item.outstandingAmount
+              )}`,
+            };
+            return formattedItem;
+          }
+          return null;
+        })
+        .filter(Boolean);
+
       setSearchResults(matchedItems);
     }
   };
-  
+
   const columns = [
     { label: "Invoice No", dataKey: "_id" },
     { label: "Status", dataKey: "status" },
@@ -140,13 +155,13 @@ function Invoices() {
   ];
 
   const handleAddButtonClick = () => {
-      router.push("/addInvoice");
+    router.push("/addInvoice");
   };
 
   return (
     <Layout>
       <Header className={classes.header} mb={10}>
-      <div className={classes.inner}>
+        <div className={classes.inner}>
           <Group>
             <Title style={{ fontSize: "15px" }}>Invoices</Title>
           </Group>
@@ -161,20 +176,32 @@ function Invoices() {
               placeholder="Search questions"
             />
             <Group ml={5} spacing={5} className={classes.links}>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Export
-              </Button>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Filter
-              </Button>
-              <Button onClick={handleAddButtonClick} >
+              <CSVLink
+                filename={"invoices.csv"}
+                data={
+                  searchResults?.length > 0
+                    ? searchResults
+                    : formattedData?.length > 0
+                    ? formattedData
+                    : []
+                }
+              >
+                <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
+                  Export
+                </Button>
+              </CSVLink>
+              <Button onClick={handleAddButtonClick}>
                 <IconPlus />
               </Button>
             </Group>
           </Group>
         </div>
       </Header>
-      <CommonTable data={searchResults.length > 0 ? searchResults : formattedData} columns={columns} title="Invoices" />
+      <CommonTable
+        data={searchResults.length > 0 ? searchResults : formattedData}
+        columns={columns}
+        title="Invoices"
+      />
     </Layout>
   );
 }

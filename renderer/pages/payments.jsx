@@ -16,6 +16,7 @@ import {
 import { IconSearch, IconPlus } from "@tabler/icons-react";
 import lunr from "lunr";
 import { useRouter } from "next/router";
+import { CSVLink, CSVDownload } from "react-csv";
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -76,6 +77,15 @@ function Payments() {
     fetcher
   );
 
+  const formattedData = data?.map((payment) => ({
+    _id: payment._id,
+    party: payment.party,
+    amount: `${localStorage.getItem("currency")} ${payment.amount}`,
+    date: new Date(payment.date).toLocaleDateString(),
+    status: payment.status,
+    partyAdmNo: payment.partyAdmNo,
+  }));
+
   const index = lunr(function () {
     this.ref("_id");
     this.field("_id");
@@ -85,36 +95,10 @@ function Payments() {
     this.field("status");
     this.field("date");
 
-    data?.forEach((item) => {
+    formattedData?.forEach((item) => {
       this.add(item);
     });
   });
-
-  const handleSearch = (e) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-
-    if (term.trim() === "") {
-      setSearchResults([]);
-    } else if (index) {
-      const results = index.search(term);
-
-      const matchedItems = results
-        .map((result) => {
-          const item = data?.find(
-            (dataItem) => dataItem._id === parseInt(result.ref)
-          );
-
-          if(item){
-            return item;
-          }
-          return null;
-        })
-        .filter(Boolean);
-
-      setSearchResults(matchedItems);
-    }
-  };
 
   const columns = [
     { label: "Payment No", dataKey: "_id" },
@@ -133,30 +117,20 @@ function Payments() {
           </Group>
 
           <Group>
-            <TextInput
-              icon={<IconSearch size="1.1rem" stroke={1.5} />}
-              radius="md"
-              size="sm"
-              value={searchTerm}
-              onChange={handleSearch}
-              placeholder="Search questions"
-            />
             <Group ml={5} spacing={5} className={classes.links}>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Export
-              </Button>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Filter
-              </Button>
+              <CSVLink
+                filename={"payments.csv"}
+                data={formattedData?.length > 0 ? formattedData : []}
+              >
+                <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
+                  Export
+                </Button>
+              </CSVLink>
             </Group>
           </Group>
         </div>
       </Header>
-      <CommonTable
-        data={searchResults.length > 0 ? searchResults : data}
-        columns={columns}
-        title="Payments"
-      />
+      <CommonTable data={formattedData} columns={columns} title="Payments" />
     </Layout>
   );
 }

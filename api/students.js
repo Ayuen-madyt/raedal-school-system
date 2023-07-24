@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-let studentsDB = new Datastore({
+export const studentsDB = new Datastore({
   filename:
     process.env.APPDATA + "/Raedal-school-system/server/databases/students.db",
   autoload: true,
@@ -31,15 +31,41 @@ router.get("/", function (req, res) {
 });
 
 router.get("/all", function (req, res) {
-  studentsDB.find({}).sort({ date: -1 }).exec(function (err, docs) {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send(docs);
-    }
-  });
+  studentsDB
+    .find({})
+    .sort({ date: -1 })
+    .exec(function (err, docs) {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send(docs);
+      }
+    });
 });
 
+router.get("/filter", function (req, res) {
+  const { studentClass, status } = req.query;
+  const filter = {};
+
+  if (studentClass) {
+    filter.studentClass = studentClass;
+  }
+
+  if (status) {
+    filter.status = status;
+  }
+
+  studentsDB
+    .find(filter)
+    .sort({ date: -1 })
+    .exec(function (err, docs) {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send(docs);
+      }
+    });
+});
 
 router.get("/:studentId", function (req, res) {
   if (!req.params.studentId) {

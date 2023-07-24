@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import Layout from "../components/Layout";
 import CommonTable from "../components/common/CommonTable";
 import fetcher from "../../functionsToCallAPI/fetcher";
@@ -13,9 +13,10 @@ import {
   Title,
   TextInput,
 } from "@mantine/core";
-import { IconSearch, IconPlus} from "@tabler/icons-react";
-import lunr from 'lunr';
+import { IconSearch, IconPlus } from "@tabler/icons-react";
+import lunr from "lunr";
 import { useRouter } from "next/router";
+import { CSVLink, CSVDownload } from "react-csv";
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -68,24 +69,22 @@ const useStyles = createStyles((theme) => ({
 
 function Teachers() {
   const { classes } = useStyles();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const router = useRouter()
+  const router = useRouter();
   const { data, error } = useSWR(
     "http://localhost:8001/api/teachers/all",
     fetcher
   );
   const index = lunr(function () {
-    this.ref('_id');
-    this.field('_id');
-    this.field('firstName');
-    this.field('secondName');
-    this.field('state');
-    this.field('status');
-    this.field('lastName');
-    this.field('passport');
-    this.field('email');
-    this.field('contact');
+    this.ref("_id");
+    this.field("_id");
+    this.field("firstName");
+    this.field("secondName");
+    this.field("state");
+    this.field("status");
+    this.field("lastName");
+    this.field("passport");
+    this.field("email");
+    this.field("contact");
 
     data?.forEach((item) => {
       this.add(item);
@@ -102,56 +101,28 @@ function Teachers() {
     { label: "State", dataKey: "state" },
   ];
 
-  const handleSearch = (e) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-  
-    if (term.trim() === '') {
-      setSearchResults([]);
-    } else if (index) {
-      const results = index.search(term);
-  
-      const matchedItems = results.map((result) => {
-        const item = data?.find((dataItem) => dataItem._id === parseInt(result.ref));
-        if (item) {
-          return item;
-        }
-        return null;
-      }).filter(Boolean);
-  
-      setSearchResults(matchedItems);
-    }
-  };
-
-
   const handleAddButtonClick = () => {
-      router.push("/addTeachers");
+    router.push("/addTeacher");
   };
 
   return (
     <Layout>
       <Header className={classes.header} mb={10}>
-      <div className={classes.inner}>
+        <div className={classes.inner}>
           <Group>
             <Title style={{ fontSize: "15px" }}>Teachers</Title>
           </Group>
 
           <Group>
-            <TextInput
-              icon={<IconSearch size="1.1rem" stroke={1.5} />}
-              radius="md"
-              size="sm"
-              value={searchTerm}
-              onChange={handleSearch}
-              placeholder="Search questions"
-            />
             <Group ml={5} spacing={5} className={classes.links}>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Export
-              </Button>
-              <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
-                Filter
-              </Button>
+              <CSVLink
+                filename={"students.csv"}
+                data={data?.length > 0 ? data : []}
+              >
+                <Button style={{ backgroundColor: "#47d6ab", color: "white" }}>
+                  Export
+                </Button>
+              </CSVLink>
               <Button onClick={handleAddButtonClick}>
                 <IconPlus />
               </Button>
@@ -159,10 +130,9 @@ function Teachers() {
           </Group>
         </div>
       </Header>
-      <CommonTable data={searchResults.length > 0 ? searchResults : data} columns={columns} title="Teachers" />
+      <CommonTable data={data} columns={columns} title="Teachers" />
     </Layout>
   );
 }
 
 export default Teachers;
-

@@ -1,5 +1,17 @@
-import React, { useEffect, useContext } from 'react';
-import { createStyles, Progress, Box, Text, Group, Paper, SimpleGrid, rem, Center, Title, Flex } from '@mantine/core';
+import React, { useEffect, useContext, useState } from "react";
+import {
+  createStyles,
+  Progress,
+  Box,
+  Text,
+  Group,
+  Paper,
+  SimpleGrid,
+  rem,
+  Center,
+  Title,
+  Flex,
+} from "@mantine/core";
 import {
   IconArrowUpRight,
   IconUserPlus,
@@ -7,17 +19,17 @@ import {
   IconReceipt2,
   IconCoin,
   IconArrowDownRight,
-} from '@tabler/icons-react';
-import { formatNumber } from '../common/formatNumber';
-import fetcher from '../../../functionsToCallAPI/fetcher';
-import useSWR from 'swr'
+} from "@tabler/icons-react";
+import { formatNumber } from "../common/formatNumber";
+import fetcher from "../../../functionsToCallAPI/fetcher";
+import useSWR from "swr";
 
 const useStyles = createStyles((theme) => ({
   statsContainer: {
-    [theme.fn.smallerThan('sm')]: {
-      width: '100%',
+    [theme.fn.smallerThan("sm")]: {
+      width: "100%",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
     },
   },
   root: {
@@ -25,12 +37,12 @@ const useStyles = createStyles((theme) => ({
   },
   tranStats: {
     width: 400,
-    [theme.fn.smallerThan('sm')]: {
-      width: '100%',
+    [theme.fn.smallerThan("sm")]: {
+      width: "100%",
     },
-    [theme.fn.largerThan('lg')]: {
-      width: '40%',
-      margin: '0 auto',
+    [theme.fn.largerThan("lg")]: {
+      width: "40%",
+      margin: "0 auto",
     },
   },
 
@@ -38,22 +50,25 @@ const useStyles = createStyles((theme) => ({
     fontSize: rem(24),
     fontWeight: 700,
     lineHeight: 1,
-    color: '#47d6ab'
+    color: "#47d6ab",
   },
 
   diff: {
     lineHeight: 1,
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
   },
 
   icon: {
-    color: theme.colorScheme === 'dark' ? theme.colors.dark[3] : theme.colors.gray[4],
+    color:
+      theme.colorScheme === "dark"
+        ? theme.colors.dark[3]
+        : theme.colors.gray[4],
   },
 
   title: {
     fontWeight: 700,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   progressLabel: {
     fontFamily: `Greycliff CF, ${theme.fontFamily}`,
@@ -73,67 +88,82 @@ const useStyles = createStyles((theme) => ({
 
   diff: {
     fontFamily: `Greycliff CF, ${theme.fontFamily}`,
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
   },
 
   icon: {
-    color: theme.colorScheme === 'dark' ? theme.colors.dark[3] : theme.colors.gray[4],
+    color:
+      theme.colorScheme === "dark"
+        ? theme.colors.dark[3]
+        : theme.colors.gray[4],
   },
 }));
 
-
-export function StatsGrid({grandTotalAmount, totalAmountThisYear}) {
+export function StatsGrid({ grandTotalAmount, totalAmountThisYear }) {
   const { classes } = useStyles();
-  const { data, error } = useSWR("http://localhost:8001/api/balances/all", fetcher);
-  
-  const balancesThisYear = data?.reduce((sum, balance) => sum + balance.balance, 0);
+  const [currency, setCurrency] = useState("");
+  const { data, error } = useSWR(
+    "http://localhost:8001/api/balances/all",
+    fetcher
+  );
 
+  useEffect(() => {
+    console.log(window.localStorage.getItem("currency"));
+    setCurrency(localStorage.getItem("currency"));
+  }, []);
 
-  const calculatePercentageTotal = (balance, feePaid)=> {
-    const total = balance+feePaid
+  const balancesThisYear = data?.reduce(
+    (sum, balance) => sum + balance.balance,
+    0
+  );
+
+  const calculatePercentageTotal = (balance, feePaid) => {
+    const total = balance + feePaid;
     const percentageBalance = Math.round((balance / total) * 100);
     const percentageTotal = Math.round((feePaid / total) * 100);
-  
+
     return {
       totalBalance: percentageBalance,
-      totalFee: percentageTotal
+      totalFee: percentageTotal,
     };
-  }
+  };
 
   const balances = [
     {
-      "title": "Total Fee Paid Overtime",
-      "value": formatNumber(grandTotalAmount),
-      "desc": "Grand Total Fee Paid Overtime"
+      title: "Total Fee Paid Overtime",
+      value: formatNumber(grandTotalAmount),
+      desc: "Grand Total Fee Paid Overtime",
     },
     {
-      "title": "Total Fee Paid This Year",
-      "icon": "receipt",
-      "value": formatNumber(totalAmountThisYear),
-      "desc": "Total amount of fee paid this year"
+      title: "Total Fee Paid This Year",
+      icon: "receipt",
+      value: formatNumber(totalAmountThisYear),
+      desc: "Total amount of fee paid this year",
     },
     {
-      "title": "Balances this year",
-      "value": formatNumber(balancesThisYear),
-      "desc": "Total fee balance unpaid this year"
+      title: "Balances this year",
+      value: formatNumber(balancesThisYear),
+      desc: "Total fee balance unpaid this year",
     },
-  ]
+  ];
 
   const statData = [
     {
-      "label": "Total Fee Paid this year",
-      "count": formatNumber(totalAmountThisYear),
-      "part": calculatePercentageTotal(balancesThisYear, totalAmountThisYear).totalFee,
-      "color": "#47d6ab"
+      label: "Total Fee Paid this year",
+      count: formatNumber(totalAmountThisYear),
+      part: calculatePercentageTotal(balancesThisYear, totalAmountThisYear)
+        .totalFee,
+      color: "#47d6ab",
     },
     {
-      "label": "Balances this year",
-      "count": formatNumber(balancesThisYear),
-      "part": calculatePercentageTotal(balancesThisYear, totalAmountThisYear).totalBalance,
-      "color": "#03141a"
+      label: "Balances this year",
+      count: formatNumber(balancesThisYear),
+      part: calculatePercentageTotal(balancesThisYear, totalAmountThisYear)
+        .totalBalance,
+      color: "#03141a",
     },
-  ]
+  ];
 
   const segments = statData.map((segment) => ({
     value: segment.part,
@@ -142,13 +172,17 @@ export function StatsGrid({grandTotalAmount, totalAmountThisYear}) {
   }));
 
   const descriptions = statData.map((stat) => (
-    <Box key={stat.label} sx={{ borderBottomColor: stat.color }} className={classes.stat}>
+    <Box
+      key={stat.label}
+      sx={{ borderBottomColor: stat.color }}
+      className={classes.stat}
+    >
       <Text tt="uppercase" fz="xs" c="dimmed" fw={700}>
         {stat.label}
       </Text>
 
       <Group position="apart" align="flex-end" spacing={0}>
-        <Text fw={700}>{`Ksh ${stat.count}`}</Text>
+        <Text fw={700}>{`${currency} ${stat.count}`}</Text>
         <Text c={stat.color} fw={700} size="sm" className={classes.statCount}>
           {stat.part}%
         </Text>
@@ -166,7 +200,7 @@ export function StatsGrid({grandTotalAmount, totalAmountThisYear}) {
         </Group>
 
         <Group align="flex-end" spacing="xs" mt={25}>
-          <Text className={classes.value}>{`Ksh ${stat.value}`}</Text>
+          <Text className={classes.value}>{`${currency} ${stat.value}`}</Text>
         </Group>
 
         <Text fz="xs" c="dimmed" mt={7}>
@@ -177,7 +211,7 @@ export function StatsGrid({grandTotalAmount, totalAmountThisYear}) {
   });
 
   return (
-    <Flex gap={20} className={classes.statsContainer} >
+    <Flex gap={20} className={classes.statsContainer}>
       <Paper withBorder p="md" radius="md" className={classes.tranStats}>
         <Text c="dimmed" fz="sm">
           Percentage segments of the fee paid and balances
@@ -188,16 +222,20 @@ export function StatsGrid({grandTotalAmount, totalAmountThisYear}) {
           classNames={{ label: classes.progressLabel }}
           mt="md"
         />
-        <SimpleGrid cols={2} breakpoints={[{ maxWidth: 'xs', cols: 1 }]} mt="xl">
+        <SimpleGrid
+          cols={2}
+          breakpoints={[{ maxWidth: "xs", cols: 1 }]}
+          mt="xl"
+        >
           {descriptions}
         </SimpleGrid>
       </Paper>
-      <Paper withBorder className={classes.root} radius='md'>
+      <Paper withBorder className={classes.root} radius="md">
         <SimpleGrid
           cols={3}
           breakpoints={[
-            { maxWidth: 'md', cols: 2 },
-            { maxWidth: 'xs', cols: 1 },
+            { maxWidth: "md", cols: 2 },
+            { maxWidth: "xs", cols: 1 },
           ]}
         >
           {stats}

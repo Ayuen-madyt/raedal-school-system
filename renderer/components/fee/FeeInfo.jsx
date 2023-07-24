@@ -88,7 +88,6 @@ export default function FeeInfo({ title, data }) {
       });
   };
 
-
   useEffect(() => {
     const resizeScrollArea = () => {
       const scrollArea = scrollAreaRef.current;
@@ -107,7 +106,6 @@ export default function FeeInfo({ title, data }) {
       window.removeEventListener("resize", resizeScrollArea);
     };
   }, []);
-
 
   return (
     <Fragment>
@@ -182,13 +180,15 @@ export default function FeeInfo({ title, data }) {
               mb="md"
             />
 
-            <Flex mt="md"
+            <Flex
+              mt="md"
               mb="md"
               gap="md"
               justify="space-between"
               align="center"
               direction="row"
-              wrap="wrap">
+              wrap="wrap"
+            >
               <Select
                 label="Term start date"
                 placeholder="Term start date"

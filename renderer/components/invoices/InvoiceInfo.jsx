@@ -21,13 +21,16 @@ import {
   Divider,
   Textarea,
   Table,
-  Alert,
+  Modal,
+  useMantineTheme,
 } from "@mantine/core";
-import { IconAlertCircle, IconTrash, IconArrowLeft } from "@tabler/icons-react";
+import { IconTrash, IconArrowLeft } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { DateInput } from "@mantine/dates";
 import { formatNumber } from "../common/formatNumber";
 import axios from "axios";
+import { useDisclosure } from "@mantine/hooks";
+import InvoicePDF from "./InvoicePDF";
 
 const useStyles = createStyles((theme) => ({
   studentContainer: {
@@ -72,9 +75,12 @@ const useStyles = createStyles((theme) => ({
 
 export default function InvoiceInfo({ title, invoice }) {
   const { classes } = useStyles();
+  const [opened, { open, close }] = useDisclosure(false);
   const [waitingDelete, setWaitingDelete] = useState(false);
+  const [currency, setCurrency] = useState("");
   const scrollAreaRef = useRef(null);
   const router = useRouter();
+  const theme = useMantineTheme();
 
   const deleteInvoice = () => {
     setWaitingDelete(true);
@@ -92,6 +98,7 @@ export default function InvoiceInfo({ title, invoice }) {
   };
 
   useEffect(() => {
+    setCurrency(localStorage.getItem("currency"));
     const resizeScrollArea = () => {
       const scrollArea = scrollAreaRef.current;
       if (scrollArea) {
@@ -110,8 +117,6 @@ export default function InvoiceInfo({ title, invoice }) {
     };
   }, []);
 
-  console.log(invoice);
-
   return (
     <Fragment>
       {/* header options */}
@@ -123,7 +128,15 @@ export default function InvoiceInfo({ title, invoice }) {
 
           <Group>
             <Group ml={5} spacing={5} className={classes.links}>
-              <Button onClick={deleteInvoice} color="red" compact disabled={waitingDelete}>
+              <Button onClick={open} color="info" compact>
+                View
+              </Button>
+              <Button
+                onClick={deleteInvoice}
+                color="red"
+                compact
+                disabled={waitingDelete}
+              >
                 {waitingDelete ? (
                   <Loader color="white" inline size="xs" />
                 ) : (
@@ -185,7 +198,7 @@ export default function InvoiceInfo({ title, invoice }) {
                 <TextInput
                   label="Party"
                   placeholder="Choose a student"
-                  value={`${invoice?.party.firstName} ${invoice?.party.secondName} ${invoice?.party.lastName}`}
+                  value={`${invoice?.party?.firstName} ${invoice?.party?.secondName} ${invoice?.party?.lastName}`}
                   w={250}
                   styles={{
                     input: classes.input,
@@ -195,7 +208,7 @@ export default function InvoiceInfo({ title, invoice }) {
                 <TextInput
                   label="Term"
                   placeholder="Choose term "
-                  value={invoice?.term.term}
+                  value={invoice?.term?.term}
                   w={250}
                   styles={{
                     input: classes.input,
@@ -215,7 +228,9 @@ export default function InvoiceInfo({ title, invoice }) {
                   w={250}
                   placeholder="Amount"
                   label="Amount"
-                  value={`KSh ${formatNumber(invoice?.actualAmountPaid)}`}
+                  value={`${currency} ${formatNumber(
+                    invoice?.actualAmountPaid
+                  )}`}
                   styles={{
                     input: classes.input,
                     label: classes.label,
@@ -286,7 +301,9 @@ export default function InvoiceInfo({ title, invoice }) {
                 mt="xl"
                 placeholder="Previous overpaid Amount"
                 label="Previous overpaid Amount"
-                value={`KSh ${formatNumber(Math.abs(invoice?.outstandingAmount))}`}
+                value={`${currency} ${formatNumber(
+                  Math.abs(invoice?.outstandingAmount)
+                )}`}
                 styles={{
                   input: classes.input,
                   label: classes.label,
@@ -297,7 +314,9 @@ export default function InvoiceInfo({ title, invoice }) {
                 mt="xl"
                 placeholder="Outstanding Amount"
                 label="Outstanding Amount"
-                value={`KSh ${formatNumber(invoice?.outstandingAmount)}`}
+                value={`${currency} ${formatNumber(
+                  invoice?.outstandingAmount
+                )}`}
                 styles={{
                   input: classes.input,
                   label: classes.label,
@@ -308,11 +327,11 @@ export default function InvoiceInfo({ title, invoice }) {
               <TextInput
                 placeholder="Amount"
                 label="Base Grand Total"
-                value={`Ksh ${invoice?.amount}`}
+                value={`${currency} ${formatNumber(invoice?.amount)}`}
                 variant="filled"
               />
             </Box>
-            <Box style={{ marginTop: "30px", marginBottom:30 }}>
+            <Box style={{ marginTop: "30px", marginBottom: 30 }}>
               <Title
                 style={{
                   fontSize: "13.5px",
@@ -334,9 +353,24 @@ export default function InvoiceInfo({ title, invoice }) {
               />
             </Box>
           </ScrollArea>
-          <Divider style={{ marginTop: -20 }} />
         </Paper>
       </Center>
+      <Modal
+        opened={opened}
+        onClose={close}
+        withCloseButton={false}
+        size="70%"
+        overlayProps={{
+          color:
+            theme.colorScheme === "dark"
+              ? theme.colors.dark[9]
+              : theme.colors.gray[2],
+          opacity: 0.55,
+          blur: 3,
+        }}
+      >
+        <InvoicePDF invoice={invoice} />
+      </Modal>
     </Fragment>
   );
 }
